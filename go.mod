@@ -1,4 +1,4 @@
-module vecmul.com
+module github.com/bincooo/vecmul.com
 
 go 1.21.6
 
