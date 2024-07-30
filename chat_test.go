@@ -8,14 +8,18 @@ import (
 	"testing"
 )
 
-var session *emit.Session
+var (
+	session *emit.Session
+
+	token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2NTciLCJyb2xlIjoiUk9MRV9VU0VSIiwiZW1haWwiOiJiaW5nY28uem5AZ21haWwuY29tIiwiaXNWZXJpZmllZCI6dHJ1ZSwiaWF0IjoxNzIyMzI5NTg5LCJleHAiOjE3MjIzMzY3ODl9.W7KmZX_VZkZ9xCwLOo3Uv4qKs2LUWfCdyk3J4DrQqUM"
+)
 
 func init() {
 	session, _ = emit.NewSocketSession("http://127.0.0.1:7890", nil, "127.0.0.1")
 }
 
 func TestChat(t *testing.T) {
-	chat := New("http://127.0.0.1:7890", GPT4o)
+	chat := New("http://127.0.0.1:7890", GPT4o, token)
 	chat.Session(session)
 
 	dataBytes, err := os.ReadFile("blob.jpg")

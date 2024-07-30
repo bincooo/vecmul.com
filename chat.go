@@ -13,6 +13,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 )
@@ -42,16 +43,19 @@ type Chat struct {
 	session *emit.Session
 
 	model string
+	token string
 }
 
 type Data struct {
 	Role           string `json:"role"`
 	Content        string `json:"content"`
 	FinishedReason string `json:"finishedReason"`
-	Error          error  `json:"-"`
+
+	Msg   string `json:"message"`
+	Error error  `json:"-"`
 }
 
-func New(proxies, model string) *Chat {
+func New(proxies, model, token string) *Chat {
 	switch model {
 	case GPT35, GPT4, GPT4o, Claude3Sonnet, Claude35Sonnet, Claude3Opus, Gemini15flash, Gemini15pro:
 	default:
@@ -61,6 +65,7 @@ func New(proxies, model string) *Chat {
 	return &Chat{
 		proxies: proxies,
 		model:   model,
+		token:   token,
 	}
 }
 
@@ -80,6 +85,7 @@ func (c *Chat) Reply(ctx context.Context, message string, attach string) (ch cha
 		Context(ctx).
 		Proxies(c.proxies).
 		URL("wss://"+host+"/ws").
+		Query("token", url.PathEscape("Bearer "+c.token)).
 		Header("Host", host).
 		Header("Origin", "https://www.vecmul.com").
 		Header("accept-language", "en-US,en;q=0.9").
@@ -155,7 +161,7 @@ func (c *Chat) Upload(ctx context.Context, file, name string) (key string, err e
 		Header("origin", "https://www.vecmul.com").
 		Header("accept-language", "en-US,en;q=0.9").
 		Header("content-type", w.FormDataContentType()).
-		Header("authorization", "Bearer null").
+		Header("authorization", "Bearer "+c.token).
 		Header("user-agent", userAgent).
 		Header("host", host).
 		Bytes(buffer.Bytes()).
@@ -205,6 +211,11 @@ func resolve(ctx context.Context, ch chan Data, conn *websocket.Conn, response *
 		if err != nil {
 			logrus.Error(err)
 			return false
+		}
+
+		if data.T == "ERROR" {
+			ch <- Data{Error: errors.New(data.D.Msg)}
+			return true
 		}
 
 		if data.T != "AI_STREAM_MESSAGE" {
