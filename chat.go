@@ -206,6 +206,8 @@ func resolve(ctx context.Context, ch chan Data, conn *websocket.Conn, response *
 			return true
 		}
 
+		logrus.Trace("--------- ORIGINAL MESSAGE ---------")
+		logrus.Tracef("%s", p)
 		data := chunk{}
 		err = json.Unmarshal(p, &data)
 		if err != nil {
