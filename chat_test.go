@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	session, _ = emit.NewSocketSession("http://127.0.0.1:7890", nil, "127.0.0.1")
+	session, _ = emit.NewSession("http://127.0.0.1:7890", emit.SimpleWithes("127.0.0.1"))
 }
 
 func TestChat(t *testing.T) {
